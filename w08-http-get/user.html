@@ -56,7 +56,6 @@
                 document.querySelector('#display-name').textContent = fullName;
                 document.querySelector('#login-handle').textContent = `@${data.login}`;
 
-                // Részletek csak akkor jelennek meg, ha van értékük
                 let html = '';
 
                 if (data.name && data.name.trim() !== '') {
@@ -72,7 +71,6 @@
                     html += `<p><strong>Blog:</strong> <a href="${data.blog}" target="_blank">${data.blog}</a></p>`;
                 }
 
-                // Ezek mindig megjelennek
                 html += `<p><strong>Nyilvános repository-k:</strong> ${data.public_repos}</p>`;
                 html += `<p><strong>Követők:</strong> ${data.followers}</p>`;
 
@@ -84,7 +82,6 @@
             }
         }
 
-        // Query paraméter beolvasása
         const params = new URLSearchParams(window.location.search);
         const username = params.get('id');
 
