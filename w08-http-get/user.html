@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git App - Felhasználó profil</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1 id="user-title">Felhasználó profil</h1>
+
+    <div class="container">
+        <div class="card" style="max-width: 700px; margin: 0 auto;">
+            <!-- Avatar -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img id="avatar" alt="Avatar"
+                     style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 4px solid #007bff;">
+            </div>
+
+            <!-- Név / Login -->
+            <h1 id="display-name" style="text-align: center; margin-bottom: 5px;"></h1>
+            <p id="login-handle" style="text-align: center; color: #666; font-size: 1.3em; margin-bottom: 25px;"></p>
+
+            <!-- Részletek -->
+            <div id="user-details"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        async function loadUser(username) {
+            try {
+                const res = await fetch(`https://api.github.com/users/${username}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        throw new Error('A felhasználó nem található.');
+                    }
+                    throw new Error('HTTP státusz: ' + res.status);
+                }
+
+                const data = await res.json();
+                const detailsDiv = document.querySelector('#user-details');
+                detailsDiv.innerHTML = '';
+
+                // Avatar
+                document.querySelector('#avatar').src = data.avatar_url;
+
+                // Display name + login
+                const fullName = data.name && data.name.trim() !== '' ? data.name : data.login;
+                document.querySelector('#display-name').textContent = fullName;
+                document.querySelector('#login-handle').textContent = `@${data.login}`;
+
+                // Részletek csak akkor jelennek meg, ha van értékük
+                let html = '';
+
+                if (data.name && data.name.trim() !== '') {
+                    html += `<p><strong>Név:</strong> ${data.name}</p>`;
+                }
+                if (data.bio && data.bio.trim() !== '') {
+                    html += `<p><strong>Bemutatkozás:</strong><br>${data.bio}</p>`;
+                }
+                if (data.location && data.location.trim() !== '') {
+                    html += `<p><strong>Helyszín:</strong> ${data.location}</p>`;
+                }
+                if (data.blog && data.blog.trim() !== '') {
+                    html += `<p><strong>Blog:</strong> <a href="${data.blog}" target="_blank">${data.blog}</a></p>`;
+                }
+
+                // Ezek mindig megjelennek
+                html += `<p><strong>Nyilvános repository-k:</strong> ${data.public_repos}</p>`;
+                html += `<p><strong>Követők:</strong> ${data.followers}</p>`;
+
+                detailsDiv.innerHTML = html;
+
+            } catch (err) {
+                console.error(err);
+                alert('Hiba a felhasználó adatainak betöltése során: ' + err.message);
+            }
+        }
+
+        // Query paraméter beolvasása
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get('id');
+
+        if (username) {
+            loadUser(username);
+        } else {
+            alert('Nincs megadva felhasználónév! (pl. user.html?id=octocat)');
+        }
+    </script>
+</body>
+</html>

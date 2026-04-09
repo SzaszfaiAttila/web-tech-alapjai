@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git App - Felhasználó keresés</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Felhasználó keresés</h1>
+
+    <input type="text" id="user-search-input" placeholder="Felhasználónév vagy kulcsszó">
+    <button class="btn btn-primary" id="search-btn">Keresés</button>
+
+    <div id="result" class="container"></div>
+
+    <script src="app.js"></script>
+    <script>
+        async function loadUsers(searchText) {
+            try {
+                const res = await fetch(
+                    `https://api.github.com/search/users?q=${encodeURIComponent(searchText)}`,
+                    {
+                        headers: {
+                            'Authorization': 'Bearer ' + GH_ACCESS_TOKEN,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+
+                if (!res.ok) {
+                    throw new Error('Hibás válasz a GitHub API-tól. Státusz: ' + res.status);
+                }
+
+                const data = await res.json();
+                const resultDiv = document.querySelector('#result');
+                resultDiv.innerHTML = '';
+
+                if (data.total_count === 0) {
+                    resultDiv.innerHTML = '<p>Nincs találat a keresésre.</p>';
+                    return;
+                }
+
+                for (const user of data.items) {
+                  const userHtml = `
+                      <div class="card">
+                          <img src="${user.avatar_url}" alt="${user.login}"
+                               style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+                          <h3>
+                              <a href="user.html?id=${encodeURIComponent(user.login)}">
+                                  ${user.login}
+                              </a>
+                          </h3>
+                          <p><strong>Típus:</strong> ${user.type}</p>
+                      </div>
+                  `;
+                    resultDiv.innerHTML += userHtml;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Hiba történt a felhasználók keresése során: ' + err.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchBtn = document.querySelector('#search-btn');
+            const inputElem = document.querySelector('#user-search-input');
+
+            searchBtn.addEventListener('click', () => {
+                const searchText = inputElem.value.trim();
+
+                if (searchText === '') {
+                    alert('Kérlek, adj meg egy keresendő felhasználónevet vagy kulcsszót!');
+                    return;
+                }
+
+                loadUsers(searchText);
+            });
+        });
+    </script>
+</body>
+</html>
